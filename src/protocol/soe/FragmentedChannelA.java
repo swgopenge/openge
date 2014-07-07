@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Vector;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
 import protocol.swg.SWGMessage;
 
@@ -12,16 +13,18 @@ public class FragmentedChannelA extends SOEMessage implements ICombinable, ISequ
 
 	private short sequence;
 	private int length;
-	private IoBuffer swgBuffer;
 	
-	public FragmentedChannelA() { }
-	public FragmentedChannelA(IoBuffer data) {
+	public FragmentedChannelA(SimpleBufferAllocator bufferPool) { 
+		this.bufferPool = bufferPool;
+	}
+	public FragmentedChannelA(IoBuffer data, SimpleBufferAllocator bufferPool) {
 		
 		super(data);
 		if(data.array().length < 8)
 			return;
 		sequence = data.getShort(2);
 		length = data.getInt(4);
+		this.bufferPool = bufferPool;
 		
 	}
 	
@@ -40,7 +43,7 @@ public class FragmentedChannelA extends SOEMessage implements ICombinable, ISequ
 	}
 	
 	private FragmentedChannelA createSegment(ByteBuffer buffer) {
-		IoBuffer message = IoBuffer.allocate(Math.min(buffer.remaining() + 4, 493));
+		IoBuffer message = bufferPool.allocate(Math.min(buffer.remaining() + 4, 493), false);
 		
 		message.putShort((short)13);
 		message.putShort((short)0);
@@ -51,7 +54,7 @@ public class FragmentedChannelA extends SOEMessage implements ICombinable, ISequ
 		
 		message.put(messageData);
 		message.flip();
-		return new FragmentedChannelA(message);
+		return new FragmentedChannelA(message, bufferPool);
 	}
 	
 	@Override

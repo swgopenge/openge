@@ -34,6 +34,7 @@ public class Client {
 	private int crc;
 	private int connectionId;
 	private NetworkDispatch dispatch;
+	private short nextSequence = 0;
 	
 	public Client(SocketAddress address, NetworkDispatch dispatch) {
 		setAddress(address);
@@ -243,6 +244,14 @@ public class Client {
 
 	public void setConnectionId(int connectionId) {
 		this.connectionId = connectionId;
+	}
+
+	public short getNextSequence() {
+		return nextSequence;
+	}
+
+	public void setNextSequence(short nextSequence) {
+		this.nextSequence = nextSequence;
 	}
 
 }

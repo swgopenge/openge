@@ -5,13 +5,15 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
 public abstract class Message {
 	
 	protected IoBuffer data;
 	protected int opcode;
 	protected short sequence;
-	
+	protected SimpleBufferAllocator bufferPool;
+
 	public Message() {
 		
 	}

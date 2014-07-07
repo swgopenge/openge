@@ -92,6 +92,8 @@ public class UDPServer {
 				bytes += packet.array().length;
 			}
 			List<IoBuffer> encoded = dispatch.getHandler().encode(client, packetsToEncode);
+			if(encoded == null)
+				continue;
 			for(IoBuffer buffer : encoded)
 				sendPacket(client, buffer);
 		}

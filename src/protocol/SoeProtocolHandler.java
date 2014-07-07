@@ -9,6 +9,7 @@ import network.Client;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
+import protocol.soe.FragmentedChannelA;
 import protocol.soe.MultiProtocol;
 import protocol.soe.DataChannelA;
 import protocol.soe.NetStatsClient;
@@ -176,7 +177,7 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		if(buffer.remaining() <= 4)
 			return null;
 		List<IoBuffer> packets = new ArrayList<IoBuffer>();
-		DataChannelA dataA = new DataChannelA(buffer);
+		DataChannelA dataA = new DataChannelA(buffer, client.getBufferPool());
 		for (IoBuffer messageData : dataA.getMessages()) {
 			if (messageData != null) {
 				messageData.flip();
@@ -239,7 +240,96 @@ public class SoeProtocolHandler implements ProtocolHandler {
 
 	@Override
 	public List<IoBuffer> encode(Client client, List<IoBuffer> packets) {
-		return packets;
+		
+		if(packets == null || packets.isEmpty())
+			return null;
+		
+		int crcSeed = client.getCrc();
+		
+		List<IoBuffer> out = new ArrayList<IoBuffer>();
+		for(IoBuffer packet : packets) {
+			if(Utilities.IsSOETypeMessage(packet.array()))
+				out.add(packet);
+		}
+
+		DataChannelA dataChannelA = new DataChannelA(client.getBufferPool());
+		for(IoBuffer packet : packets) {
+			if (packet == null) continue;
+			if (packet.array().length < 6) continue;
+			int opcode = packet.getInt(2);
+			if(opcode == 0x1B24F808 || opcode == 0xC867AB5A) // send movement packets as unreliable packets
+				continue;
+			if (!dataChannelA.addMessage(packet) && packet.array().length <= 487) {
+				out.add(dataChannelA.serialize());
+				dataChannelA = new DataChannelA(client.getBufferPool());
+				dataChannelA.addMessage(packet);
+			} else if(packet.array().length > 487) {
+				if (dataChannelA.hasMessages()) {
+					out.add(dataChannelA.serialize());
+					dataChannelA = new DataChannelA(client.getBufferPool());
+				}
+				FragmentedChannelA fragChanA = new FragmentedChannelA(client.getBufferPool());
+				for (FragmentedChannelA fragChanASection : fragChanA.create(packet.array())) {
+					out.add(fragChanASection.serialize());
+				}
+			}
+		}
+		
+		if (dataChannelA.hasMessages()) 
+			out.add(dataChannelA.serialize());
+		
+		MultiProtocol multiProtocol = new MultiProtocol(client.getBufferPool());
+		for (IoBuffer packet : packets) {
+			if (packet == null) continue;
+			if (packet.array().length < 6) continue;
+			int opcode = packet.getInt(2);
+			if(opcode != 0x1B24F808 && opcode != 0xC867AB5A)
+				continue;
+			if(packet.array().length > 255)
+				continue;
+			if(!multiProtocol.addSWGMessage(packet)) {
+				 out.add(multiProtocol.serialize());
+				 multiProtocol = new MultiProtocol(client.getBufferPool());
+				 multiProtocol.addSWGMessage(packet); 
+			}
+			
+		}
+		
+		if (multiProtocol.hasMessages())
+			 out.add(multiProtocol.serialize());
+
+		for(IoBuffer outPacket : out) {
+			
+			short opcode = outPacket.getShort(0);
+			if(opcode == 2) // dont encrypt/compress session response
+				continue;
+			if(opcode == 9 || opcode == 13) {
+				short nextSequence = client.getNextSequence();
+				outPacket.putShort(2, nextSequence);
+				client.setNextSequence((short) (nextSequence + 1));
+				byte[] packet = messageCRC.append(
+									messageEncryption.encrypt(
+											messageCompression.compress(outPacket.array()), crcSeed), crcSeed);
+				outPacket.free();
+				outPacket = client.getBufferPool().allocate(packet.length, false).put(packet);
+				client.addSentPacket(nextSequence, outPacket);
+			} else {
+				byte[] packet = null;
+				if(opcode == 21) {
+					packet = messageCRC.append(
+										messageEncryption.encrypt(outPacket.array(), crcSeed), crcSeed);
+				} else {
+					packet = messageCRC.append(
+								messageEncryption.encrypt(
+									messageCompression.compress(outPacket.array()), crcSeed), crcSeed);
+				}
+				outPacket.free();
+				outPacket = client.getBufferPool().allocate(packet.length, false).put(packet);
+			}
+			
+		}
+		
+		return out;
 	}
 
 	public MessageCRC getMessageCRC() {

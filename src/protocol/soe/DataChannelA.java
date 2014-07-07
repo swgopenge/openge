@@ -2,7 +2,10 @@ package protocol.soe;
 
 import java.nio.ByteBuffer;
 import java.util.Vector;
+
 import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.buffer.SimpleBufferAllocator;
+
 import protocol.swg.SWGMessage;
 
 public class DataChannelA extends SOEMessage implements ISequenced, ICombinable {
@@ -10,11 +13,14 @@ public class DataChannelA extends SOEMessage implements ISequenced, ICombinable 
 	private Vector<IoBuffer> messages;
 	private short sequence;
 	
-	public DataChannelA() { }
+	public DataChannelA(SimpleBufferAllocator bufferPool) { 
+		this.bufferPool = bufferPool;
+	}
 	
-	public DataChannelA(IoBuffer data) { 
+	public DataChannelA(IoBuffer data, SimpleBufferAllocator bufferPool) { 
 		super(data); 
 		sequence = data.getShort(2);
+		this.bufferPool = bufferPool;
 	}
 	
 	public boolean addMessage(SWGMessage message) {
@@ -57,7 +63,7 @@ public class DataChannelA extends SOEMessage implements ISequenced, ICombinable 
 	
 	@Override
 	public IoBuffer serialize() {
-		IoBuffer message = IoBuffer.allocate(496);
+		IoBuffer message = bufferPool.allocate(496, false);
 		message.putShort((short)9);
 		message.putShort((short)sequence);
 		if (messages.size() > 1) {
@@ -91,13 +97,13 @@ public class DataChannelA extends SOEMessage implements ISequenced, ICombinable 
 				if (length > buffer.remaining() || !buffer.hasArray() || length < 0)
 					break;
 
-				messages.add(IoBuffer.allocate(length).put(buffer.array(), buffer.position(), length));
+				messages.add(bufferPool.allocate(length, false).put(buffer.array(), buffer.position(), length));
 				buffer.position(buffer.position() + length);
 			}
 		}
 		else {
 			int length = data.array().length - 4;
-			messages.add(IoBuffer.allocate(length).put(buffer.array(), 4, length));
+			messages.add(bufferPool.allocate(length, false).put(buffer.array(), 4, length));
 		}
 		
 		IoBuffer [] tmp = new IoBuffer[messages.size()];

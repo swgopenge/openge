@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Vector;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
 import protocol.swg.SWGMessage;
 
@@ -16,7 +17,9 @@ public class MultiProtocol extends SOEMessage {
 
 	private short sequencedMessageCount = 0;
 	
-	public MultiProtocol() { }
+	public MultiProtocol(SimpleBufferAllocator bufferPool) { 
+		this.bufferPool = bufferPool;
+	}
 	public MultiProtocol(IoBuffer data) { 
 		super(data); 
 	}
@@ -96,33 +99,11 @@ public class MultiProtocol extends SOEMessage {
 	
 	@Override
 	public IoBuffer serialize() {
-		
 		if (swgMessages.size() == 0)
 			return IoBuffer.allocate(0);
 		
-		/*if (messages.size() == 1) {
-			if (messages.get(0) instanceof ISequenced)
-				((ISequenced)messages.get(0)).setSequence((short)sequence);
-			return messages.get(0).serialize();
-		}*/
-		
-		ByteBuffer message = ByteBuffer.allocate(496);
+		IoBuffer message = bufferPool.allocate(getMessagesSize(), false);
 		message.putShort((short)3);
-		
-		/*for (int i = 0; i < messages.size(); i++) {
-			short sequence2 = sequence;
-			int messageLength = messages.get(i).getSize();
-			message.put((byte)messageLength);
-			if (messages.get(i) instanceof ISequenced)
-				((ISequenced)messages.get(i)).setSequence(sequence2);
-			message.put(messages.get(i).serialize().array());
-			if(messages.get(i).getData() != null) {
-				if(messages.get(i) instanceof ISequenced) {
-					sequence2++;
-	
-				}
-			}
-		}*/
 		
 		for(IoBuffer swgMsg : swgMessages) {
 			
@@ -134,11 +115,19 @@ public class MultiProtocol extends SOEMessage {
 			
 		}
 		
-		int size = message.position();
-		IoBuffer message2 = IoBuffer.allocate(size).put(message.array(), 0, size);
-		return message2.flip();
-		
+		return message.flip();
 	}
+	
+	public int getMessagesSize() {
+		int size = 2;
+		for(IoBuffer swgMsg : swgMessages) {
+			byte[] packet = swgMsg.array();
+			int length = packet.length;
+			size += length + 1;
+		}
+		return size;
+	}
+	
 	public IoBuffer[] getMessages() { 
 		
 		Vector<IoBuffer> msgs = new Vector<IoBuffer>();
