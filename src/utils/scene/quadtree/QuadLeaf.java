@@ -1,8 +1,8 @@
 package utils.scene.quadtree;
 
 public class QuadLeaf<T> {
-	public volatile float x;
-	public volatile float y;
+	public float x;
+	public float y;
 	public final T value;
 	public QuadNode<T> node;
 
