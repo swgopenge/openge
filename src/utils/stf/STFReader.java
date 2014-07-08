@@ -70,6 +70,12 @@ public class STFReader
 		
 		// Add our HashMap to cached hashmap to prevent reloading loading of STFs
 		cachedSTFs.put(stfPath, map);
+		file.close();
 		return map;
+	}
+	
+	public static String getString(String stfPath, String key) throws IOException
+	{
+		return read(stfPath).get(key);
 	}
 }
