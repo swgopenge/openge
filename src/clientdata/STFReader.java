@@ -17,10 +17,10 @@ public class STFReader
 	public static Map<String, String> read(String stfPath) throws IOException
 	{
 		// If we already loaded the STF file, lets return it's results
-		if(cachedSTFs.get("stfPath") != null) return cachedSTFs.get("stfPath");
+		if(cachedSTFs.get(stfPath) != null) return cachedSTFs.get(stfPath);
 
 		// Lets go ahead and load the STF since it hasn't already been loaded
-		FileInputStream file = new FileInputStream(stfPath);
+		FileInputStream file = new FileInputStream("./clientdata/string/en/" + stfPath);
 		IoBuffer buffer = IoBuffer.allocate(file.available(), false);
 		
 		buffer.setAutoExpand(true);
