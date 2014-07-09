@@ -26,5 +26,6 @@
 	<classpathentry kind="lib" path="lib/MINA/mina-integration-xbean-2.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/MINA/mina-statemachine-2.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/MINA/mina-transport-apr-2.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/toxiclibscore.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
