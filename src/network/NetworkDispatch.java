@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import org.apache.mina.core.buffer.IoBuffer;
+
 import protocol.ProtocolHandler;
 
 public class NetworkDispatch {
@@ -58,9 +60,14 @@ public class NetworkDispatch {
 					//System.out.println("Unhandled Opcode: " + opcode);
 				}
 			}
-			if(handler != null)
-				handler.handlePacket(client, packet);
-			
+			packet.position(0);
+			if(handler != null) {
+				try {
+					handler.handlePacket(client, packet);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 			packet.free();
 		});
 	}
