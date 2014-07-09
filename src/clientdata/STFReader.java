@@ -26,6 +26,9 @@ public class STFReader
 		buffer.setAutoExpand(true);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		
+		byte[] buf = new byte[1024];
+		for (int i = file.read(buf); i != -1; i = file.read(buf)) buffer.put(buf, 0, i);
+
 		int entryCount = buffer.getInt();
 		STFEntry[] entries = new STFEntry[entryCount];
 		
