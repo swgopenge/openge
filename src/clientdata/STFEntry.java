@@ -1,4 +1,4 @@
-package utils.stf;
+package clientdata;
 
 public class STFEntry 
 {
