@@ -20,6 +20,7 @@ import clientdata.VisitorInterface;
 import utils.scene.u3d.Mesh3DTriangle;
 import utils.scene.u3d.Triangle;
 import utils.scene.Point3D;
+import utils.unsafe.OffHeapMemory;
 
 @SuppressWarnings("unused")
 public class MeshVisitor implements VisitorInterface {
@@ -39,9 +40,9 @@ public class MeshVisitor implements VisitorInterface {
 	public void parseData(String nodename, IoBuffer data, int depth, int size) throws Exception {
 
 		if(nodename.equals("BOX")) {
-			
-			box.point1 = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
-			box.point2 = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
+			// useless data
+			//box.point1 = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
+			//box.point2 = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
 
 		} else if(nodename.contains("NAME")) {
 			
@@ -49,9 +50,9 @@ public class MeshVisitor implements VisitorInterface {
 			meshes.add(currentMesh);
 			
 		} else if(nodename.equals("0001SPHR")) {
-			
-			sphere.center = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
-			sphere.radius = data.getFloat();
+			// useless data
+			//sphere.center = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
+			//sphere.radius = data.getFloat();
 			
 		} else if(nodename.equals("0003INFO")) {
 			
@@ -61,9 +62,7 @@ public class MeshVisitor implements VisitorInterface {
 		} else if(nodename.equals("FLORDATA")) {
 			
 			if(data.get() == 1) {
-				
 				collisionFilename = data.getString(Charset.forName("US-ASCII").newDecoder());
-
 			}
 			
 		} else if(nodename.equals("DATA")) {
@@ -75,8 +74,10 @@ public class MeshVisitor implements VisitorInterface {
 			for(int i = 0; i < vertexCount; i++) {
 				
 				Vertex v = new Vertex();
-				v.position = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
-				/*v.normal = */new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
+				v.position = (Vector3D) OffHeapMemory.allocateObject(new Vector3D(data.getFloat(), data.getFloat(), data.getFloat())).object;
+				// useless data
+				/*
+				//v.normal = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
 
 				if(hasColor)
 					v.color = data.getInt();
@@ -87,7 +88,7 @@ public class MeshVisitor implements VisitorInterface {
 					uvPair.x = data.getFloat();
 					uvPair.y = data.getFloat();
 					//v.uvs.add(uvPair);
-				}
+				}*/
 				currentMesh.vertices.add(v);
 			}
 			
@@ -99,7 +100,7 @@ public class MeshVisitor implements VisitorInterface {
 			
 			for(int i = 1; i <= count; i += 3) {
 				
-				Triangle tri = new Triangle();
+				Triangle tri = (Triangle) OffHeapMemory.allocateObject(new Triangle()).object;
 				
 				if(bytesPerIndex == 4) {
 					
@@ -235,7 +236,7 @@ public class MeshVisitor implements VisitorInterface {
 					vertex3.y = (float) vert3.position.getY();
 					vertex3.z = (float) vert3.position.getZ();
 	
-					Mesh3DTriangle triangle = new Mesh3DTriangle(vertex1, vertex2, vertex3);
+					Mesh3DTriangle triangle = (Mesh3DTriangle) OffHeapMemory.allocateObject(new Mesh3DTriangle(vertex1, vertex2, vertex3)).object;
 					triangles.add(triangle);
 				}
 				

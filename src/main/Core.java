@@ -1,9 +1,7 @@
 package main;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
 import database.odb.ObjectDatabase;
 import protocol.SoeProtocolHandler;
 import network.NetworkDispatch;
@@ -63,7 +61,6 @@ public class Core {
 	public static void main(String args[]) throws Exception {
 		Core core = new Core();
 		core.start();
-		System.out.println(Utilities.getHexString(ByteBuffer.allocate(8).putLong(-1844241594 & 0x00000000ffffffffL).array()));
 		while(core.getGalaxyStatus() != GalaxyStatus.Offline) {
 			Thread.sleep(1000);
 		}

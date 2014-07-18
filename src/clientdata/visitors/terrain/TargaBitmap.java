@@ -6,6 +6,8 @@ import java.nio.ByteOrder;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
+import utils.unsafe.OffHeapMemory;
+
 @SuppressWarnings("unused")
 public class TargaBitmap {
 	
@@ -103,7 +105,7 @@ public class TargaBitmap {
 			TargaPixel pixel = null;
 			switch(datatypecode) {
 				case 3:
-					pixel = new TargaBlackPixel();
+					pixel = (TargaPixel) OffHeapMemory.allocateObject(new TargaBlackPixel()).object;
 					break;
 				case 2:
 				case 10:

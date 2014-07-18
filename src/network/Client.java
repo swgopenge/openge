@@ -15,6 +15,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
+import utils.collections.NonBlockingHashMap;
+
 public class Client {
 	
 	private SocketAddress address;
@@ -23,7 +25,7 @@ public class Client {
 	private int recieved = 0;
 	private int sent = 0;
 	private Map<Short, IoBuffer> sentPackets = Collections.synchronizedMap(new TreeMap<Short, IoBuffer>());
-	private Map<Short, IoBuffer> resentPackets = new ConcurrentHashMap<Short, IoBuffer>();
+	private Map<Short, IoBuffer> resentPackets = new NonBlockingHashMap<Short, IoBuffer>();
 	private List<IoBuffer> currentFragmentedPackets = new ArrayList<IoBuffer>();
 	private int currentFragTotalSize;
 	private int currentFragRemainingSize;

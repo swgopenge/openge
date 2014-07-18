@@ -15,6 +15,7 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
 import protocol.Message;
+import utils.collections.NonBlockingHashMap;
 
 public class UDPServer {
 	
@@ -30,7 +31,7 @@ public class UDPServer {
 	private Thread sendThread;
 	private Thread receiveThread;
 	private ServerState state = ServerState.Down;
-	private Map<SocketAddress, Client> clients = new ConcurrentHashMap<SocketAddress, Client>();
+	private Map<SocketAddress, Client> clients = new NonBlockingHashMap<SocketAddress, Client>();
 	private DatagramPacket recvPacket = new DatagramPacket(new byte[496], 496);
 	private DatagramPacket sendPacket = new DatagramPacket(new byte[496], 496);
 	private SimpleBufferAllocator bufferPool = new SimpleBufferAllocator();
