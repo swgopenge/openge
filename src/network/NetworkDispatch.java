@@ -43,32 +43,32 @@ public class NetworkDispatch {
 		if(packet == null)
 			return;
 		threadPool.execute(() -> {
-			packet.position(0);			
-			if(!packet.hasRemaining())
-				return;
-			packet.skip(2); // skip priority code
-			int opcode = packet.getInt();
-			PacketHandler handler = null;
-			if(opcode == 0x80CE5E46) {
-				handler = objControllerHandlers.get(opcode);
-				if(handler == null) {
-					//System.out.println("Unhandled Obj Controller Opcode: " + opcode);
+				packet.position(0);			
+				if(!packet.hasRemaining())
+					return;
+				packet.skip(2); // skip priority code
+				int opcode = packet.getInt();
+				PacketHandler handler = null;
+				if(opcode == 0x80CE5E46) {
+					handler = objControllerHandlers.get(opcode);
+					if(handler == null) {
+						//System.out.println("Unhandled Obj Controller Opcode: " + opcode);
+					}
+				} else {
+					handler = packetHandlers.get(opcode);
+					if(handler == null) {
+						//System.out.println("Unhandled Opcode: " + opcode);
+					}
 				}
-			} else {
-				handler = packetHandlers.get(opcode);
-				if(handler == null) {
-					//System.out.println("Unhandled Opcode: " + opcode);
+				packet.position(0);
+				if(handler != null) {
+					try {
+						handler.handlePacket(client, packet);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
-			}
-			packet.position(0);
-			if(handler != null) {
-				try {
-					handler.handlePacket(client, packet);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			packet.free();
+				packet.free();
 		});
 	}
 

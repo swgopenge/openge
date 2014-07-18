@@ -11,3 +11,9 @@
 hs_err_pid*
 /bin
 /.settings
+
+
+odb/accounts/je.info.*
+odb/characters/je.info.*
+*.jdb
+*.lck

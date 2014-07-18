@@ -1,9 +1,15 @@
 package main;
 
-import protocol.ProtocolHandler;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import database.odb.ObjectDatabase;
 import protocol.SoeProtocolHandler;
 import network.NetworkDispatch;
 import network.UDPServer;
+import services.login.Account;
+import services.login.LoginService;
 import utils.*;
 
 public class Core {
@@ -17,6 +23,8 @@ public class Core {
 	private UDPServer zoneServer;
 	private NetworkDispatch loginDispatch;
 	private NetworkDispatch zoneDispatch;
+	private List<ObjectDatabase> odbs = new ArrayList<ObjectDatabase>();
+	private LoginService loginService;
 	
 	public enum GalaxyStatus {
 		Offline,
@@ -43,6 +51,9 @@ public class Core {
 		zoneDispatch = new NetworkDispatch(new SoeProtocolHandler(), true, zoneServer);
 		loginServer.setDispatch(loginDispatch);
 		zoneServer.setDispatch(zoneDispatch);
+		loginService = new LoginService(this);
+		odbs.add(new ObjectDatabase("accounts", true, true, true, Account.class));
+		odbs.add(new ObjectDatabase("characters", true, true, true, Character.class));
 		pingServer.start();
 		loginServer.start();
 		zoneServer.start();
@@ -52,6 +63,7 @@ public class Core {
 	public static void main(String args[]) throws Exception {
 		Core core = new Core();
 		core.start();
+		System.out.println(Utilities.getHexString(ByteBuffer.allocate(8).putLong(-1844241594 & 0x00000000ffffffffL).array()));
 		while(core.getGalaxyStatus() != GalaxyStatus.Offline) {
 			Thread.sleep(1000);
 		}
@@ -59,6 +71,9 @@ public class Core {
 	
 	public void stop() {
 		setGalaxyStatus(GalaxyStatus.Offline);		
+	}
+	
+	public void saveODBs() {
 	}
 	
 	public static Core getInstance() {
