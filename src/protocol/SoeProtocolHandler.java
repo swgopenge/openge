@@ -16,6 +16,7 @@ import protocol.soe.NetStatsClient;
 import protocol.soe.NetStatsServer;
 import protocol.soe.Ping;
 import protocol.soe.SessionResponse;
+import protocol.soe.SessionResponse.EncryptionType;
 import utils.Utilities;
 
 public class SoeProtocolHandler implements ProtocolHandler {
@@ -234,7 +235,7 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		int clientUDPSize = buffer.getInt();
 		client.setConnectionId(connectionId);
 		client.setCrc(crcGenerator.nextInt());
-		SessionResponse response = new SessionResponse(connectionId, clientUDPSize, crcLength, 0x0401, clientUDPSize);
+		SessionResponse response = new SessionResponse(connectionId, clientUDPSize, crcLength, true, EncryptionType.XOR, clientUDPSize);
 		client.sendPacket(response.serialize());
 	}
 

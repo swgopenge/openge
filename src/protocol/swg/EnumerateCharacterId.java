@@ -11,6 +11,13 @@ public class EnumerateCharacterId extends SWGMessage {
 	private byte[] characters;
 	private int characterCount = 0;
 	
+	public enum CharacterType {
+		INVALID,
+		NONE,
+		JEDI,
+		SPECTRAL
+	}
+	
 	public EnumerateCharacterId() {
 		IoBuffer result = IoBuffer.allocate(6).order(ByteOrder.LITTLE_ENDIAN);
 		
@@ -49,14 +56,14 @@ public class EnumerateCharacterId extends SWGMessage {
 		return (data == null) ? 0 : data.array().length + characters.length + 4;
 	}
 	
-	public void addCharacter(String character, int speciesCRC, long characterID, int galaxyID, int status) {
+	public void addCharacter(String character, int speciesCRC, long characterID, int galaxyID, CharacterType type) {
 		IoBuffer result = IoBuffer.allocate(24 + character.length() * 2).order(ByteOrder.LITTLE_ENDIAN);
 		
 		result.put(getUnicodeString(character));
 		result.putInt(speciesCRC);
 		result.putLong(characterID);
 		result.putInt(galaxyID);
-		result.putInt(status);
+		result.putInt(type.ordinal());
 		result.flip();
 		
 		if (characters == null)
