@@ -25,7 +25,7 @@ public class LoginService implements Service {
 	public LoginService(Core core) {
 		this.core = core;
 		requiredVersion = core.getConfig().getString("RequiredVersion");
-		autoRegistration = core.getConfig().getInt("AutoRegistration") != 0;
+		autoRegistration = core.getConfig().getBoolean("AutoRegistration");
 		loginType = core.getConfig().getInt("LoginType");
 	}
 
