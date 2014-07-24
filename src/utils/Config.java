@@ -50,6 +50,10 @@ public class Config {
 	public String getString(String key) {
 		return getProperty(key);
 	}
+	
+	public boolean getBoolean(String key) {
+		return Boolean.valueOf(getString(key));
+	}
 
 	public void initialize() {
 		configData = new Properties();
