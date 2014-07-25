@@ -1,12 +1,13 @@
 package clientdata;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
@@ -20,17 +21,30 @@ public class STFReader
 		if(cachedSTFs.get(stfPath) != null) return cachedSTFs.get(stfPath);
 
 		// Lets go ahead and load the STF since it hasn't already been loaded
-		FileInputStream file = new FileInputStream("./clientdata/string/en/" + stfPath);
-		IoBuffer buffer = IoBuffer.allocate(file.available(), false);
+		File stfFile = new File("./clientdata/string/en/" + stfPath);
+		FileInputStream fileStream = new FileInputStream(stfFile);
+		IoBuffer buffer = IoBuffer.allocate(fileStream.available(), false);
 		
 		buffer.setAutoExpand(true);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		
-		byte[] buf = new byte[1024];
-		for (int i = file.read(buf); i != -1; i = file.read(buf)) buffer.put(buf, 0, i);
-
-		int entryCount = buffer.getInt();
+		buffer.put(Files.readAllBytes(stfFile.toPath()));
+		
+		buffer.flip();
+		
+		int size = buffer.getInt();
+		buffer.get();	// unknown
+		int rowCount = buffer.getInt();	// amount of rows in the file
+		int entryCount = buffer.getInt();	// amount of entries
+		
+		// Create STFEntries
 		STFEntry[] entries = new STFEntry[entryCount];
+		STFEntry newEntry = null;
+		
+		for(int i = 0; i < entryCount; i++) {
+			newEntry = new STFEntry();
+			entries[i] = newEntry;
+		}
 		
 		// Read values
 		for(int i = 0; i < entryCount; i++)
@@ -48,7 +62,12 @@ public class STFReader
 				buffer.skip(1); 
 			}
 			
-			entries[i].value = new String(characterBuffer, "UTF-8");
+			try {
+				entries[entryNumber - 1].value = new String(characterBuffer, StandardCharsets.UTF_8);
+			} catch (NullPointerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		// Read keys
@@ -56,7 +75,6 @@ public class STFReader
 		{
 			int entryNumber = buffer.getInt();
 			int characters = buffer.getInt();
-			
 			byte[] characterBuffer = new byte[characters];
 			
 			for(int a = 0; a < characters; a++)
@@ -64,7 +82,8 @@ public class STFReader
 				characterBuffer[a] = buffer.get();
 			}
 			
-			entries[i].key = new String(characterBuffer, "UTF-8");
+			entries[entryNumber - 1].key = new String(characterBuffer, StandardCharsets.UTF_8);
+			
 		}
 		
 		// Convert STFEntry array to HashMap
@@ -73,7 +92,8 @@ public class STFReader
 		
 		// Add our HashMap to cached hashmap to prevent reloading loading of STFs
 		cachedSTFs.put(stfPath, map);
-		file.close();
+		fileStream.close();
+		
 		return map;
 	}
 	
