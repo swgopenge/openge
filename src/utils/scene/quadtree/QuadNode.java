@@ -11,11 +11,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class QuadNode<T> {
 
 	private Set<QuadLeaf<T>> leafs;
-	private volatile boolean hasChildren = false;
-	private volatile QuadNode<T> NW = null;
-	private volatile QuadNode<T> NE = null;
-	private volatile QuadNode<T> SE = null;
-	private volatile QuadNode<T> SW = null;
+	private AtomicBoolean hasChildren = new AtomicBoolean(false);
+	private QuadNode<T> NW = null;
+	private QuadNode<T> NE = null;
+	private QuadNode<T> SE = null;
+	private QuadNode<T> SW = null;
 	private final Box bounds;
     private AtomicBoolean lock = new AtomicBoolean(false);
     private int maxElementsPerNode;
@@ -29,7 +29,8 @@ public class QuadNode<T> {
 	}
 
 	public boolean put(QuadLeaf<T> leaf) {
-		if (this.hasChildren) return getChild(leaf.x, leaf.y).put(leaf);
+		QuadNode<T> node = getChild(leaf.x, leaf.y);
+		if (hasChildren.get() && node != null) return node.put(leaf);
 		if(contains(leaf.value))
 			return false;
 		while(!lock()) {
@@ -62,7 +63,8 @@ public class QuadNode<T> {
 	}
 
 	public boolean remove(float x, float y, T value) {
-		if (this.hasChildren && value != null && getChild(x, y) != null) return getChild(x, y).remove(x, y, value);
+		QuadNode<T> node = getChild(x, y);
+		if (hasChildren.get() && value != null && node != null) return node.remove(x, y, value);
 		while(!lock()) {
 			
 		}
@@ -82,7 +84,8 @@ public class QuadNode<T> {
 	}
 	
 	public boolean update(float x, float y, T value) {
-		if (this.hasChildren && value != null && getChild(x, y) != null) return getChild(x, y).update(x, y, value);
+		QuadNode<T> node = getChild(x, y);	
+		if (hasChildren.get() && value != null && node != null) return node.update(x, y, value);
 
 		boolean removed = false;
 		
@@ -93,13 +96,15 @@ public class QuadNode<T> {
 			QuadLeaf<T> leaf = getLeafByValue(value);
 			if(leaf == null)
 				return false;
+			// if we're still in this node just change the leafs position
 			if(bounds.contains(x, y)) {
 				leaf.x = x;
 				leaf.y = y;
 				return true;
+			// else we need to remove the leaf from this node and do a new search for the position from the root node
 			} else {
 				removed = true;
-				leafs.remove(value);
+				leafs.remove(leaf);
 			}
 		} finally {
 			unlock();
@@ -116,7 +121,7 @@ public class QuadNode<T> {
 	}
 
 	public void clear() {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			this.NW.clear();
 			this.NE.clear();
 			this.SE.clear();
@@ -125,14 +130,14 @@ public class QuadNode<T> {
 			this.NE = null;
 			this.SE = null;
 			this.SW = null;
-			this.hasChildren = false;
+			this.hasChildren.set(false);
 		} else {
 			this.leafs.clear();
 		}
 	}
 
 	public T get(float x, float y, AbstractFloat bestDistance) {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			T closest = null;
 			QuadNode<T> bestChild = this.getChild(x, y);
 			if (bestChild != null) {
@@ -184,7 +189,7 @@ public class QuadNode<T> {
 	}
 
 	public ArrayList<T> get(float x, float y, float maxDistance, ArrayList<T> values) {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			if (this.NW.bounds.calcDist(x, y) <= maxDistance) {
 				this.NW.get(x, y, maxDistance, values);
 			}
@@ -264,11 +269,11 @@ public class QuadNode<T> {
 	}*/
 
 	private void divide() {
+		hasChildren.compareAndSet(false, true);
 		this.NW = new QuadNode<T>(this.bounds.minX, this.bounds.centreY, this.bounds.centreX, this.bounds.maxY, maxElementsPerNode, tree);
 		this.NE = new QuadNode<T>(this.bounds.centreX, this.bounds.centreY, this.bounds.maxX, this.bounds.maxY, maxElementsPerNode, tree);
 		this.SE = new QuadNode<T>(this.bounds.centreX, this.bounds.minY, this.bounds.maxX, this.bounds.centreY, maxElementsPerNode, tree);
 		this.SW = new QuadNode<T>(this.bounds.minX, this.bounds.minY, this.bounds.centreX, this.bounds.centreY, maxElementsPerNode, tree);
-		this.hasChildren = true;
 		if (this.leafs.size() > 0) {
 			for(QuadLeaf<T> leaf : leafs)
 				getChild(leaf.x, leaf.y).put(leaf);
@@ -277,7 +282,7 @@ public class QuadNode<T> {
 	}
 
 	private QuadNode<T> getChild(float x, float y) {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			if (x < this.bounds.centreX) {
 				if (y < this.bounds.centreY)
 					return this.SW;
@@ -291,7 +296,7 @@ public class QuadNode<T> {
 	}
 
 	public QuadLeaf<T> firstLeaf() {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			QuadLeaf<T> leaf = this.SW.firstLeaf();
 			if (leaf == null) { leaf = this.NW.firstLeaf(); }
 			if (leaf == null) { leaf = this.SE.firstLeaf(); }
@@ -314,7 +319,7 @@ public class QuadNode<T> {
 	}
 
 	public boolean nextLeaf(QuadLeaf<T> currentLeaf, AbstractLeaf<T> nextLeaf) {
-		if (this.hasChildren) {
+		if (hasChildren.get()) {
 			boolean found = false;
 			if (currentLeaf.x <= this.bounds.centreX && currentLeaf.y <= this.bounds.centreY) {
 				found = this.SW.nextLeaf(currentLeaf, nextLeaf);
@@ -363,14 +368,14 @@ public class QuadNode<T> {
 	}
 		
 	public boolean contains(T value) {
-		if(hasChildren) {
-			if(NW.contains(value))
+		if(hasChildren.get()) {
+			if(NW != null && NW.contains(value))
 				return true;
-			if(NE.contains(value))
+			if(NE != null && NE.contains(value))
 				return true;
-			if(SW.contains(value))
+			if(SW != null && SW.contains(value))
 				return true;
-			if(SE.contains(value))
+			if(SE != null && SE.contains(value))
 				return true;
 			return false;
 		} else {

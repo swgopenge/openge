@@ -55,7 +55,7 @@ public class Core {
 		pingServer.start();
 		loginServer.start();
 		zoneServer.start();
-		setGalaxyStatus(GalaxyStatus.Online);			
+		setGalaxyStatus(GalaxyStatus.Online);
 	}
 	
 	public static void main(String args[]) throws Exception {

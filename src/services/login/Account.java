@@ -2,7 +2,6 @@ package services.login;
 
 import database.odb.PersistentObject;
 
-
 public class Account implements PersistentObject {
 	
 	private static final long serialVersionUID = 1L;
