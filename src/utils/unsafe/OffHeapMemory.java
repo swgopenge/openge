@@ -130,7 +130,7 @@ public class OffHeapMemory {
 	 */
 
 	public static Pointer allocateObject(Object obj) {
-		long size = sizeOf(obj);
+		long size = sizeOf(obj.getClass());
 		Pointer pointerObj = null;
 		try {
 			pointerObj = (Pointer) unsafe.allocateInstance(Pointer.class);
@@ -195,6 +195,18 @@ public class OffHeapMemory {
         }
 
         return ((maxSize/wordSize) + 1) * wordSize;   // padding
+    }
+    
+    public static long sizeOf(Class<?> clazz) {
+	    long maximumOffset = 0;
+	    do {
+	      for (Field f : clazz.getDeclaredFields()) {
+	        if (!Modifier.isStatic(f.getModifiers())) {
+	          maximumOffset = Math.max(maximumOffset, unsafe.objectFieldOffset(f));
+	        }
+	      }
+	    } while ((clazz = clazz.getSuperclass()) != null);
+	    return maximumOffset + 8;
     }
     
     public static Unsafe getUnsafe() {
