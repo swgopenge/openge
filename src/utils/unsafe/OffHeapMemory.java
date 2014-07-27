@@ -9,8 +9,14 @@ import sun.misc.Unsafe;
 public class OffHeapMemory {
 	
 	private static Unsafe unsafe;
+	private static int addressSize;
 	
 	static {
+		String bits = System.getProperty("sun.arch.data.model");
+		if(bits.equals("32"))
+			addressSize = 4;
+		else
+			addressSize = 8;
     	Field f;
 		try {
 			f = Unsafe.class.getDeclaredField("theUnsafe");
@@ -152,7 +158,10 @@ public class OffHeapMemory {
     public static long toAddress(Object obj) {
         Object[] array = new Object[] {obj};
         long baseOffset = unsafe.arrayBaseOffset(Object[].class);
-        return normalize(unsafe.getInt(array, baseOffset));
+        if(addressSize == 4)
+        	return normalize(unsafe.getInt(array, baseOffset));
+        else
+        	return unsafe.getLong(array, baseOffset);
     }
 
     public static Object fromAddress(long address) {
