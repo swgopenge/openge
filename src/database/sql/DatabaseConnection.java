@@ -37,7 +37,7 @@ public class DatabaseConnection {
 		ResultSet resultSet = null;
 		
 		try {
-			if(type == "mysql") {
+			if(type.equals("mysql")) {
 				connection = DriverManager.getConnection("jdbc:" + type + "://" + host + "/" + database + "?autoReconnect=true", user, pass);
 				statement = connection.createStatement();
 				resultSet = statement.executeQuery("SELECT VERSION()");
