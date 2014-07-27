@@ -10,6 +10,7 @@ public class OffHeapMemory {
 	
 	private static Unsafe unsafe;
 	private static int addressSize;
+	private static int wordSize;
 	
 	static {
 		String bits = System.getProperty("sun.arch.data.model");
@@ -17,6 +18,7 @@ public class OffHeapMemory {
 			addressSize = 4;
 		else
 			addressSize = 8;
+		wordSize = (addressSize * 8) / 8;
     	Field f;
 		try {
 			f = Unsafe.class.getDeclaredField("theUnsafe");
@@ -192,7 +194,7 @@ public class OffHeapMemory {
             }
         }
 
-        return ((maxSize/8) + 1) * 8;   // padding
+        return ((maxSize/wordSize) + 1) * wordSize;   // padding
     }
     
     public static Unsafe getUnsafe() {
