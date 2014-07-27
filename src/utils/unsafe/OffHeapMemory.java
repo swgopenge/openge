@@ -47,7 +47,6 @@ public class OffHeapMemory {
 		} catch (NoSuchFieldException | SecurityException e) {
 			e.printStackTrace();
 		}        
-		System.out.println(getHotSpotMBean().getVMOption("Xmx").getValue());
         oopSize = (int) Math.abs(off2 - off1);
 		String bits = System.getProperty("sun.arch.data.model");
 		if(bits.equals("32")) { 
