@@ -112,8 +112,12 @@ public class UDPServer {
 				clients.put(address, client);
 			}	
 			if(dispatch != null) {
-				for(IoBuffer packet : dispatch.getHandler().decode(client, buffer))
-					dispatch.onRecieve(client, packet);
+				// The SoeProtocolHandler is obviously not always returning something. Do not let the loop suffer </3
+				List<IoBuffer> decodedPackets = dispatch.getHandler().decode(client, buffer);
+				if (decodedPackets != null) {
+					for(IoBuffer packet : decodedPackets)
+						dispatch.onRecieve(client, packet);
+				}
 			}
 			else
 				sendPacket(client, buffer);
