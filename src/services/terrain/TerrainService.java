@@ -11,6 +11,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.Vector;
 
+import utils.FileUtilities;
 import clientdata.STFTable;
 import network.PacketHandler;
 import network.Service;
@@ -33,6 +34,12 @@ public class TerrainService implements Service {
 	    	
 	        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 	        	String terrainName = file.getFileName().toString().replace(".py", "");
+	        	if(!FileUtilities.doesFileExist("clientdata/terrain/" + terrainName + ".trn")) {
+	        		System.out.println("Terrain: \"" + terrainName + "\" was not loaded: Terrain file not found.");
+	        		return FileVisitResult.CONTINUE;
+	        				
+	        	}
+	        	
 	        	SWGTerrain newTerrain = null;
 	        	String scriptPath = "";
 	        	
@@ -44,7 +51,7 @@ public class TerrainService implements Service {
 	    			newTerrain = new SpaceSector(terrainName);
 	    			scriptPath = spaceFolder;
 	    		}
-
+	    		
 	    		String stfName = STFTable.read("planet_n.stf").getValue(terrainName);
 	    		
 	    		scripting.ScriptingManager.callScript(scriptPath, terrainName, "setup", newTerrain);
