@@ -25,6 +25,7 @@ public class NetworkDispatch {
 	public NetworkDispatch(ProtocolHandler handler, boolean isZone, UDPServer server) {
 		this.handler = handler;
 		this.isZone = isZone;
+		this.server = server;
 	}
 
 	public ProtocolHandler getHandler() {
