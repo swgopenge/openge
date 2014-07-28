@@ -64,7 +64,6 @@ public class TerrainService implements Service {
 	    		}
 	    		
 	    		terrainList.add(newTerrain);
-	    		System.out.println("Terrain: " + terrainName + " succesfully loaded.");
 	    		
 	        	return FileVisitResult.CONTINUE;
 	        }

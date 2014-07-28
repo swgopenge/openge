@@ -42,6 +42,10 @@ public class Config {
 	public int getInt(String key) {
 		return Integer.parseInt(getString(key));
 	}
+	
+	public byte getByte(String key) {
+		return Byte.parseByte(getString(key));
+	}
 
 	public String getProperty(String key) {
 		return configData.getProperty(key);

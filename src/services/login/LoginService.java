@@ -19,14 +19,14 @@ public class LoginService implements Service {
 	
 	private Core core;
 	private String requiredVersion;
-	private int loginType;
+	private byte loginType;
 	private boolean autoRegistration;
 	
 	public LoginService(Core core) {
 		this.core = core;
 		requiredVersion = core.getConfig().getString("RequiredVersion");
 		autoRegistration = core.getConfig().getBoolean("AutoRegistration");
-		loginType = core.getConfig().getInt("LoginType");
+		loginType = core.getConfig().getByte("LoginType");
 	}
 
 	@Override
