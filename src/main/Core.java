@@ -50,6 +50,7 @@ public class Core {
 		loginServer.setDispatch(loginDispatch);
 		zoneServer.setDispatch(zoneDispatch);
 		loginService = new LoginService(this);
+		loginDispatch.addService(loginService);
 		odbs.add(new ObjectDatabase("accounts", true, true, true, Account.class));
 		odbs.add(new ObjectDatabase("characters", true, true, true, Character.class));
 		pingServer.start();

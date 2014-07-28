@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.mina.core.buffer.CachedBufferAllocator;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
 
@@ -132,7 +133,8 @@ public class UDPServer {
 			sendPacket.setSocketAddress(client.getAddress());
 			sendPacket.setData(packet.array());
 			socket.send(sendPacket);
-			packet.free();
+			if(!client.getSentPackets().containsValue(packet))
+				packet.free();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
