@@ -88,7 +88,7 @@ public class DataChannelA extends SOEMessage implements ISequenced, ICombinable 
 		IoBuffer buffer = data;
 		buffer.position(4);
 		if (buffer.getShort() == 0x19) {
-			while (buffer.position() < data.array().length) {
+			while (buffer.position() < data.array().length && buffer.hasRemaining()) {
 				short length = (short)(buffer.get() & 0xFF);
 				if (length == 255)
 					length = buffer.getShort();

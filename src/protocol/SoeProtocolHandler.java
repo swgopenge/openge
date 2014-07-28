@@ -53,16 +53,19 @@ public class SoeProtocolHandler implements ProtocolHandler {
 			return null;
 		} else if(opcode != 1 && client.getCrc() != 0) {
 			int length = Utilities.getActiveLengthOfBuffer(buffer);
-			IoBuffer decode = client.getBufferPool().allocate(length, false).put(buffer.array(), 0, length);
-			byte[] data = decode.array();
+			byte [] data = new byte[length];
+			System.arraycopy(buffer.array(), 0, data, 0, length);
 			data = messageCompression.decompress(
 						messageEncryption.decrypt(
 							messageCRC.validate(data, client.getCrc()), client.getCrc()));
-			if(!decode.hasRemaining() || !decode.hasArray() || Utilities.getActiveLengthOfBuffer(decode) < 4)
+			buffer.clear();
+			buffer.setAutoExpand(true);
+			buffer.position(0);
+			buffer.put(data);
+			buffer.flip();
+			buffer.position(0);
+			if(!buffer.hasRemaining() || !buffer.hasArray() || Utilities.getActiveLengthOfBuffer(buffer) < 4)
 				return null;
-			decode.position(0);
-			buffer.free();
-			buffer = decode;
 		}
 		
 		switch(opcode) {
@@ -178,6 +181,7 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		if(buffer.remaining() <= 4)
 			return null;
 		List<IoBuffer> packets = new ArrayList<IoBuffer>();
+		buffer.position(0);
 		DataChannelA dataA = new DataChannelA(buffer, client.getBufferPool());
 		for (IoBuffer messageData : dataA.getMessages()) {
 			if (messageData != null) {
@@ -235,7 +239,7 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		int clientUDPSize = buffer.getInt();
 		client.setConnectionId(connectionId);
 		client.setCrc(crcGenerator.nextInt());
-		SessionResponse response = new SessionResponse(connectionId, clientUDPSize, crcLength, true, EncryptionType.XOR, clientUDPSize);
+		SessionResponse response = new SessionResponse(connectionId, client.getCrc(), crcLength, true, EncryptionType.XOR, clientUDPSize);
 		client.sendPacket(response.serialize());
 	}
 
