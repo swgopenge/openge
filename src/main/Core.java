@@ -2,18 +2,21 @@ package main;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import database.odb.ObjectDatabase;
 import protocol.SoeProtocolHandler;
 import network.NetworkDispatch;
 import network.UDPServer;
 import services.login.Account;
 import services.login.LoginService;
+import services.terrain.TerrainService;
 import utils.*;
 
 public class Core {
 	
 	public static Core instance;
 	private GalaxyStatus galaxyStatus = GalaxyStatus.Offline;
+	private TerrainService terrainService;
 	private Config config;
 	private long galacticTime = System.currentTimeMillis();
 	private UDPServer loginServer;
@@ -42,6 +45,7 @@ public class Core {
 	
 	public void start() {
 		setGalaxyStatus(GalaxyStatus.Loading);
+		terrainService = new TerrainService();
 		pingServer = new UDPServer(config.getInt("PING.PORT"), 0);
 		loginServer = new UDPServer(config.getInt("LOGIN.PORT"), 5);
 		zoneServer = new UDPServer(config.getInt("ZONE.PORT"), 5);
