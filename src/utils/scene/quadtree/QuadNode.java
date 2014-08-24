@@ -363,10 +363,8 @@ public class QuadNode<T> {
 		return lock.compareAndSet(false, true);
 	}
 
-	public boolean unlock() {
-	    return lock.compareAndSet(true, false);
-	}
-		
+	public boolean unlock() { return lock.compareAndSet(true, false); }
+
 	public boolean contains(T value) {
 		if(hasChildren.get()) {
 			if(NW != null && NW.contains(value))

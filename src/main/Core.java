@@ -25,7 +25,7 @@ public class Core {
 	private NetworkDispatch loginDispatch;
 	private NetworkDispatch zoneDispatch;
 	private List<ObjectDatabase> odbs = new ArrayList<ObjectDatabase>();
-	private LoginService loginService;
+	public LoginService loginService;
 	
 	public enum GalaxyStatus {
 		Offline,
@@ -77,6 +77,10 @@ public class Core {
 	
 	public void saveODBs() {
 	}
+
+    public ObjectDatabase getObjectDatabase(int index) {
+        return odbs.get(index);
+    }
 	
 	public static Core getInstance() {
 		return instance;
