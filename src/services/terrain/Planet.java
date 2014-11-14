@@ -7,7 +7,7 @@ import clientdata.visitors.WorldSnapshotVisitor;
 
 public class Planet extends SWGTerrain {
 	private WorldSnapshotVisitor snapshotVisitor;
-	private TerrainVisitor terrainVisitor = new TerrainVisitor();
+	private TerrainVisitor terrainVisitor;
 	
 	public TerrainVisitor getTerrainVisitor() {
 		return terrainVisitor;

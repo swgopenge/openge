@@ -74,7 +74,7 @@ public class MeshVisitor implements VisitorInterface {
 			for(int i = 0; i < vertexCount; i++) {
 				
 				Vertex v = new Vertex();
-				v.position = (Vector3D) OffHeapMemory.allocateObject(new Vector3D(data.getFloat(), data.getFloat(), data.getFloat())).object;
+				v.position = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
 				// useless data
 				/*
 				//v.normal = new Vector3D(data.getFloat(), data.getFloat(), data.getFloat());
@@ -236,7 +236,7 @@ public class MeshVisitor implements VisitorInterface {
 					vertex3.y = (float) vert3.position.getY();
 					vertex3.z = (float) vert3.position.getZ();
 	
-					Mesh3DTriangle triangle = (Mesh3DTriangle) OffHeapMemory.allocateObject(new Mesh3DTriangle(vertex1, vertex2, vertex3)).object;
+					Mesh3DTriangle triangle = new Mesh3DTriangle(vertex1, vertex2, vertex3);
 					triangles.add(triangle);
 				}
 				

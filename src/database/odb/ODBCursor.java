@@ -23,20 +23,10 @@ public class ODBCursor {
         DatabaseEntry theData = new DatabaseEntry();
 		if(cursor.getNext(theKey, theData, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
 			Object obj = dataBinding.entryToObject(theData);
-	       /* if(obj instanceof SWGObject) {
-	        	((SWGObject) obj).initializeBaselines(); ((SWGObject) obj).initAfterDBLoad();
-	        	((SWGObject) obj).viewChildren((SWGObject) obj, true, true, child -> { 
-	        		if(child != null) {
-		        		child.initializeBaselines(); 
-		        		child.initAfterDBLoad(); 
-	        		}
-	        	});
-	        }*/
 			return obj;
 		}
 		else 
 			return null;
-		
 	}
 	
 	public void close() {

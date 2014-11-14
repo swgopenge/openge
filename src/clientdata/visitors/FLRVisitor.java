@@ -27,7 +27,7 @@ public class FLRVisitor implements VisitorInterface {
 					case "6": version = 6;
 					
 					default: System.out.println("Unknown .flr version");
-	
+
 				}
 				
 				for(int i = size/3; i > 0; --i) {

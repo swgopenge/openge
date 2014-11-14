@@ -3,6 +3,8 @@ package main;
 import java.util.ArrayList;
 import java.util.List;
 
+import clientdata.*;
+import clientdata.visitors.TerrainVisitor;
 import database.odb.ObjectDatabase;
 import protocol.SoeProtocolHandler;
 import network.NetworkDispatch;
@@ -44,8 +46,10 @@ public class Core {
 	}
 	
 	public void start() {
-		setGalaxyStatus(GalaxyStatus.Loading);
-		terrainService = new TerrainService();
+		setGalaxyStatus(GalaxyStatus.Loading);		
+		odbs.add(new ObjectDatabase("accounts", true, true, true, Account.class));
+		odbs.add(new ObjectDatabase("characters", true, true, true, Character.class));
+		//terrainService = new TerrainService();
 		pingServer = new UDPServer(config.getInt("PING.PORT"), 0);
 		loginServer = new UDPServer(config.getInt("LOGIN.PORT"), 5);
 		zoneServer = new UDPServer(config.getInt("ZONE.PORT"), 5);
@@ -55,12 +59,17 @@ public class Core {
 		zoneServer.setDispatch(zoneDispatch);
 		loginService = new LoginService(this);
 		loginDispatch.addService(loginService);
-		odbs.add(new ObjectDatabase("accounts", true, true, true, Account.class));
-		odbs.add(new ObjectDatabase("characters", true, true, true, Character.class));
 		pingServer.start();
 		loginServer.start();
 		zoneServer.start();
 		setGalaxyStatus(GalaxyStatus.Online);
+        try {
+			ClientFileManager.loadFile("terrain/tatooine.trn", TerrainVisitor.class);
+		} catch (InstantiationException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        System.gc();
 	}
 	
 	public static void main(String args[]) throws Exception {
