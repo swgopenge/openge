@@ -37,6 +37,8 @@ public class Client {
 	private int connectionId;
 	private NetworkDispatch dispatch;
 	private short nextSequence = 0;
+	private long accountID;
+	private byte[] sessionKey;
 	
 	public Client(SocketAddress address, NetworkDispatch dispatch) {
 		setAddress(address);
@@ -254,6 +256,22 @@ public class Client {
 
 	public void setNextSequence(short nextSequence) {
 		this.nextSequence = nextSequence;
+	}
+
+	public long getAccountID() {
+		return accountID;
+	}
+
+	public void setAccountID(long accountID) {
+		this.accountID = accountID;
+	}
+
+	public byte[] getSessionKey() {
+		return sessionKey;
+	}
+
+	public void setSessionKey(byte[] sessionKey) {
+		this.sessionKey = sessionKey;
 	}
 
 }

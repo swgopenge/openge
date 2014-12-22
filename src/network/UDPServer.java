@@ -6,10 +6,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+
+import main.Core;
 
 import org.apache.mina.core.buffer.CachedBufferAllocator;
 import org.apache.mina.core.buffer.IoBuffer;
@@ -38,10 +41,12 @@ public class UDPServer {
 	private SimpleBufferAllocator bufferPool = new SimpleBufferAllocator();
 	private NetworkDispatch dispatch;
 	private int sendQueueDelay;
+	private String name;
 	
-	public UDPServer(int port, int sendQueueDelay) {
+	public UDPServer(int port, int sendQueueDelay, String name) {
 		this.port = port;
-		this.sendQueueDelay = sendQueueDelay;
+		this.sendQueueDelay = sendQueueDelay;	
+		this.name = name;
 	}
 	
 	public void start() {
@@ -52,6 +57,7 @@ public class UDPServer {
 				while(state == ServerState.Up)
 					receive();
 			});
+			receiveThread.setName(name + " recieve");
 			if(dispatch != null) {
 				sendThread = new Thread(() -> {
 					while(state == ServerState.Up) {
@@ -64,6 +70,7 @@ public class UDPServer {
 						send();
 					}
 				});
+				sendThread.setName(name + " send");
 				sendThread.start();
 			}
 			receiveThread.start();
@@ -74,10 +81,14 @@ public class UDPServer {
 	}
 
 	private void send() {
+		if(clients.isEmpty())
+			return;
 		for(Client client : clients.values()) {
 			if(client.isOutOfOrder())
 				continue;
 			Queue<IoBuffer> packets = client.getPacketQueue();
+			if(packets.isEmpty())
+				continue;
 			if(sendQueueDelay < 0) {
 				for(IoBuffer packet : packets)
 					sendPacket(client, packet);
@@ -86,7 +97,7 @@ public class UDPServer {
 			}
 			List<IoBuffer> packetsToEncode = new ArrayList<IoBuffer>();
 			int bytes = 0;
-			while(bytes < maxBytesPerTick || packets.isEmpty()) {
+			while(bytes < maxBytesPerTick && !packets.isEmpty()) {
 				IoBuffer packet = packets.poll();
 				if(packet == null)
 					break;
@@ -104,6 +115,8 @@ public class UDPServer {
 	private void receive() {
 		try {
 			socket.receive(recvPacket);
+			if(recvPacket.getLength() == 0)
+				return;
 			IoBuffer buffer = bufferPool.allocate(recvPacket.getLength(), false).put(recvPacket.getData(), 0, recvPacket.getLength());
 			buffer.position(0);
 			SocketAddress address = recvPacket.getSocketAddress();

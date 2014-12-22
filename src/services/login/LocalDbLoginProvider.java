@@ -16,7 +16,7 @@ public class LocalDbLoginProvider implements ILoginProvider {
 	}
 
 	@Override
-	public int getAccountId(String username, String password, String remoteAddress) {
+	public long getAccountId(String username, String password, String remoteAddress) {
 		Core core = Core.getInstance();
 		boolean autoReg = core.loginService.isAutoRegistration();
 		Account account = (Account) accountODB.get(username);
@@ -31,6 +31,8 @@ public class LocalDbLoginProvider implements ILoginProvider {
 		if(account == null && !autoReg) {
 			return -2; 
 		} else if(account != null) {
+			if(account.isBanned())
+				return -4;
 			boolean passMatch = false;
 			try {
 				passMatch = PasswordEncryption.validatePassword(password, account.getPasswordHash());
@@ -44,7 +46,7 @@ public class LocalDbLoginProvider implements ILoginProvider {
 			accountODB.put(username, account);
 		}
 		
-		return 0;
+		return account.getId();
 	}
 
 

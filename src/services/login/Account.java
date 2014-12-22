@@ -1,5 +1,7 @@
 package services.login;
 
+import java.util.Vector;
+
 import database.odb.PersistentObject;
 
 public class Account implements PersistentObject {
@@ -8,6 +10,8 @@ public class Account implements PersistentObject {
 	private long id;
 	private String userName;
 	private String passwordHash;
+	private boolean isBanned = false;
+	private Vector<Long> characters = new Vector<Long>();
 	
 	public Account(long id, String userName, String passwordHash) {
 		this.id = id;
@@ -42,6 +46,30 @@ public class Account implements PersistentObject {
 
 	public void setPasswordHash(String passwordHash) {
 		this.passwordHash = passwordHash;
+	}
+	
+	public int getNumberOfCharacters() {
+		return characters.size();
+	}
+	
+	public void addCharacter(long id) {
+		characters.add(id);
+	}
+	
+	public void removeCharacter(long id) {
+		characters.remove(id);
+	}
+
+	public boolean isBanned() {
+		return isBanned;
+	}
+
+	public void setBanned(boolean isBanned) {
+		this.isBanned = isBanned;
+	}
+	
+	public Vector<Long> getCharacters() {
+		return characters;
 	}
 
 }

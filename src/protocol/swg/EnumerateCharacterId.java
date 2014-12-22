@@ -19,12 +19,6 @@ public class EnumerateCharacterId extends SWGMessage {
 	}
 	
 	public EnumerateCharacterId() {
-		IoBuffer result = IoBuffer.allocate(6).order(ByteOrder.LITTLE_ENDIAN);
-		
-		result.putShort((short)2);
-		result.putInt(0x65EA4574);
-		
-		data = result;
 	}
 	
 	public void deserialize(IoBuffer data) {
@@ -33,17 +27,16 @@ public class EnumerateCharacterId extends SWGMessage {
 	
 	public IoBuffer serialize() {
 		if (characters == null) {
-			IoBuffer result = IoBuffer.allocate(9 + data.array().length).order(ByteOrder.LITTLE_ENDIAN);
-			result.put(data);
-			
+			IoBuffer result = IoBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN);
+			result.putShort((short)2);
+			result.putInt(0x65EA4574);
 			result.putInt(0);
-			result.put((byte) 0);
 			result.flip();
-
 			return result;
 		} else {
-			IoBuffer result = IoBuffer.allocate(4 + data.array().length + characters.length).order(ByteOrder.LITTLE_ENDIAN);
-			result.put(data);
+			IoBuffer result = IoBuffer.allocate(10 + characters.length).order(ByteOrder.LITTLE_ENDIAN);
+			result.putShort((short)2);
+			result.putInt(0x65EA4574);
 			result.putInt(characterCount);
 			result.put(characters);
 			result.flip();

@@ -17,6 +17,8 @@ import protocol.soe.NetStatsServer;
 import protocol.soe.Ping;
 import protocol.soe.SessionResponse;
 import protocol.soe.SessionResponse.EncryptionType;
+import protocol.swg.LoginServerId;
+import protocol.swg.LoginServerString;
 import utils.Utilities;
 
 public class SoeProtocolHandler implements ProtocolHandler {
@@ -104,6 +106,7 @@ public class SoeProtocolHandler implements ProtocolHandler {
 	}
 	
 	private void handleAcknowledgementA(Client client, IoBuffer buffer) {
+		
 		short sequence = buffer.getShort(2);
 		if(sequence < client.getLastACKSequence())
 			return;
@@ -251,49 +254,49 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		
 		int crcSeed = client.getCrc();
 		
-		List<IoBuffer> out = new ArrayList<IoBuffer>();
+		List<IoBuffer> packed = new ArrayList<IoBuffer>();
 		for(IoBuffer packet : packets) {
 			if(Utilities.IsSOETypeMessage(packet.array()))
-				out.add(packet);
+				packed.add(packet);
 		}
 
 		DataChannelA dataChannelA = new DataChannelA(client.getBufferPool());
 		for(IoBuffer packet : packets) {
-			if (packet == null) continue;
-			if (packet.array().length < 6) continue;
+			if (packet == null || packed.contains(packet)) continue;
+			if (packet.array().length < 6 || packet.limit() < 6) continue;
 			int opcode = packet.getInt(2);
 			if(opcode == 0x1B24F808 || opcode == 0xC867AB5A) // send movement packets as unreliable packets
 				continue;
 			if (!dataChannelA.addMessage(packet) && packet.array().length <= 487) {
-				out.add(dataChannelA.serialize());
+				packed.add(dataChannelA.serialize());
 				dataChannelA = new DataChannelA(client.getBufferPool());
 				dataChannelA.addMessage(packet);
 			} else if(packet.array().length > 487) {
 				if (dataChannelA.hasMessages()) {
-					out.add(dataChannelA.serialize());
+					packed.add(dataChannelA.serialize());
 					dataChannelA = new DataChannelA(client.getBufferPool());
 				}
 				FragmentedChannelA fragChanA = new FragmentedChannelA(client.getBufferPool());
 				for (FragmentedChannelA fragChanASection : fragChanA.create(packet.array())) {
-					out.add(fragChanASection.serialize());
+					packed.add(fragChanASection.serialize());
 				}
 			}
 		}
 		
 		if (dataChannelA.hasMessages()) 
-			out.add(dataChannelA.serialize());
+			packed.add(dataChannelA.serialize());
 		
 		MultiProtocol multiProtocol = new MultiProtocol(client.getBufferPool());
 		for (IoBuffer packet : packets) {
-			if (packet == null) continue;
-			if (packet.array().length < 6) continue;
+			if (packet == null || packed.contains(packet)) continue;
+			if (packet.array().length < 6 || packet.limit() < 6) continue;
 			int opcode = packet.getInt(2);
 			if(opcode != 0x1B24F808 && opcode != 0xC867AB5A)
 				continue;
 			if(packet.array().length > 255)
 				continue;
 			if(!multiProtocol.addSWGMessage(packet)) {
-				 out.add(multiProtocol.serialize());
+				packed.add(multiProtocol.serialize());
 				 multiProtocol = new MultiProtocol(client.getBufferPool());
 				 multiProtocol.addSWGMessage(packet); 
 			}
@@ -301,35 +304,34 @@ public class SoeProtocolHandler implements ProtocolHandler {
 		}
 		
 		if (multiProtocol.hasMessages())
-			 out.add(multiProtocol.serialize());
+			packed.add(multiProtocol.serialize());
 
-		for(IoBuffer outPacket : out) {
+		List<IoBuffer> out = new ArrayList<IoBuffer>(packed.size());
+		for(IoBuffer packedPacket : packed) {
 			
-			short opcode = outPacket.getShort(0);
-			if(opcode == 2) // dont encrypt/compress session response
+			short opcode = packedPacket.getShort(0);
+			if(opcode == 2) { // dont encrypt/compress session response
+				out.add(packedPacket);
 				continue;
+			}
 			if(opcode == 9 || opcode == 13) {
 				short nextSequence = client.getNextSequence();
-				outPacket.putShort(2, nextSequence);
+				packedPacket.putShort(2, nextSequence);
 				client.setNextSequence((short) (nextSequence + 1));
 				byte[] packet = messageCRC.append(
 									messageEncryption.encrypt(
-											messageCompression.compress(outPacket.array()), crcSeed), crcSeed);
-				outPacket.free();
-				outPacket = client.getBufferPool().allocate(packet.length, false).put(packet);
+											messageCompression.compress(packedPacket.array()), crcSeed), crcSeed);
+				IoBuffer outPacket = client.getBufferPool().allocate(packet.length, false).put(packet).flip();
+				out.add(outPacket);
 				client.addSentPacket(nextSequence, outPacket);
 			} else {
 				byte[] packet = null;
-				if(opcode == 21) {
-					packet = messageCRC.append(
-										messageEncryption.encrypt(outPacket.array(), crcSeed), crcSeed);
-				} else {
-					packet = messageCRC.append(
-								messageEncryption.encrypt(
-									messageCompression.compress(outPacket.array()), crcSeed), crcSeed);
-				}
-				outPacket.free();
-				outPacket = client.getBufferPool().allocate(packet.length, false).put(packet);
+				packet = messageCRC.append(
+							messageEncryption.encrypt(
+									messageCompression.compress(packedPacket.array()), crcSeed), crcSeed);
+
+				IoBuffer outPacket = client.getBufferPool().allocate(packet.length, false).put(packet).flip();				
+				out.add(outPacket);
 			}
 			
 		}

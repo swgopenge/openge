@@ -25,7 +25,7 @@ public class LoginClusterStatus extends SWGMessage {
 		result.flip();
 		return result;
 	}
-	public void addServer(int galaxyID, String serverIP, int serverPort, int pingPort, int maxCharacters, int status, int recommended, int population, Client client) {
+	public void addServer(int galaxyID, String serverIP, int serverPort, int pingPort, int maxCharacters, int status, int recommended, int population) {
 		IoBuffer result = IoBuffer.allocate(39 + serverIP.length()).order(ByteOrder.LITTLE_ENDIAN);
 		
 		int populationStatus = 0;
@@ -44,13 +44,13 @@ public class LoginClusterStatus extends SWGMessage {
 			status = 3;
 		}
 		result.putInt(populationStatus); 	// 0 = very light, 1 = light, 2 = medium , 3 = heavy, 4 = very heavy, 5 = extremely heavy, 6 = full
-		result.putInt(maxCharacters);
+		result.putInt(maxCharacters); // per account
 		//result.putInt(0xFFFF8F80); 	// Distance?
-		result.putInt(timeZone.getRawOffset() / 3600000);
+		result.putInt(Math.abs(timeZone.getRawOffset() / 3600000));
 		result.putInt(status);
 		result.put((byte)recommended);
-		result.putInt(2500);		// Unknown
-		result.putInt(250);			// Unknown
+		result.putInt(3000);		// online player limit
+		result.putInt(0);			// trial player limit
 		result.flip();
 		
 		if (servers == null)

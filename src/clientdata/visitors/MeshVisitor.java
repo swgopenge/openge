@@ -25,8 +25,8 @@ import utils.unsafe.OffHeapMemory;
 @SuppressWarnings("unused")
 public class MeshVisitor implements VisitorInterface {
 
-	public Box box = new Box();
-	public Sphere sphere = new Sphere();
+	public Box box;
+	public Sphere sphere;
 	public int vertexCount;
 	public String collisionFilename;
 	public Vector<Vertex> vertices = new Vector<Vertex>();
@@ -242,8 +242,20 @@ public class MeshVisitor implements VisitorInterface {
 				
 			}
 			this.triangles = triangles;
+			dispose();
 		}
+		
 		return triangles;
+	}
+	
+	private void dispose() {
+		vertices.clear();
+		tris.clear();
+		meshes.clear();
+		vertices = null;
+		tris = null;
+		meshes = null;
+		currentMesh = null;		
 	}
 	
 	public void createAABBTree(HE_Mesh mesh) {

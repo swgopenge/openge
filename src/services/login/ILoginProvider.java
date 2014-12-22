@@ -9,6 +9,6 @@ public interface ILoginProvider {
 	 * -3 is "invalid password"
 	 * -4 is "banned"
 	 */
-	public int getAccountId(String username, String password, String remoteAddress);
+	public long getAccountId(String username, String password, String remoteAddress);
 	
 }

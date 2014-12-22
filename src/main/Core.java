@@ -28,6 +28,7 @@ public class Core {
 	private NetworkDispatch zoneDispatch;
 	private List<ObjectDatabase> odbs = new ArrayList<ObjectDatabase>();
 	public LoginService loginService;
+	private String galaxyName;
 	
 	public enum GalaxyStatus {
 		Offline,
@@ -46,13 +47,14 @@ public class Core {
 	}
 	
 	public void start() {
+		setGalaxyName(config.getString("GalaxyName"));
 		setGalaxyStatus(GalaxyStatus.Loading);		
 		odbs.add(new ObjectDatabase("accounts", true, true, true, Account.class));
 		odbs.add(new ObjectDatabase("characters", true, true, true, Character.class));
 		//terrainService = new TerrainService();
-		pingServer = new UDPServer(config.getInt("PING.PORT"), 0);
-		loginServer = new UDPServer(config.getInt("LOGIN.PORT"), 5);
-		zoneServer = new UDPServer(config.getInt("ZONE.PORT"), 5);
+		pingServer = new UDPServer(config.getInt("PING.PORT"), 0, "Ping");
+		loginServer = new UDPServer(config.getInt("LOGIN.PORT"), 5, "Login");
+		zoneServer = new UDPServer(config.getInt("ZONE.PORT"), 5, "Zone");
 		loginDispatch = new NetworkDispatch(new SoeProtocolHandler(), false, loginServer);
 		zoneDispatch = new NetworkDispatch(new SoeProtocolHandler(), true, zoneServer);
 		loginServer.setDispatch(loginDispatch);
@@ -63,18 +65,13 @@ public class Core {
 		loginServer.start();
 		zoneServer.start();
 		setGalaxyStatus(GalaxyStatus.Online);
-        try {
-			ClientFileManager.loadFile("terrain/tatooine.trn", TerrainVisitor.class);
-		} catch (InstantiationException | IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        System.gc();
+		
 	}
 	
 	public static void main(String args[]) throws Exception {
 		Core core = new Core();
 		core.start();
+		ClientFileManager.loadFile("terrain/tatooine.trn", TerrainVisitor.class);
 		while(core.getGalaxyStatus() != GalaxyStatus.Offline) {
 			Thread.sleep(1000);
 		}
@@ -161,6 +158,18 @@ public class Core {
 
 	public void setZoneDispatch(NetworkDispatch zoneDispatch) {
 		this.zoneDispatch = zoneDispatch;
+	}
+	
+	public int getNumberOfConnectedCharacters() {
+		return zoneServer.getClients().size();
+	}
+
+	public String getGalaxyName() {
+		return galaxyName;
+	}
+
+	public void setGalaxyName(String galaxyName) {
+		this.galaxyName = galaxyName;
 	}
 
 }

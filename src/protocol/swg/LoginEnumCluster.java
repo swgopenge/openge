@@ -46,7 +46,7 @@ public class LoginEnumCluster extends SWGMessage {
 		
 		result.putInt(galaxyID);
 		result.put(getAsciiString(serverName));
-		result.putInt(timeZone.getRawOffset() / 3600000);
+		result.putInt(Math.abs(timeZone.getRawOffset() / 3600000));
 		result.flip();
 		
 		if (servers == null)

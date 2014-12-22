@@ -18,11 +18,11 @@ public class VBLoginProvider implements ILoginProvider {
 	}
 
 	@Override
-	public int getAccountId(String username, String password, String remoteAddress) {
+	public long getAccountId(String username, String password, String remoteAddress) {
 		return getAccount(username, password, remoteAddress);
 	}
 		
-	private int getAccount(String username, String password, String remoteAddress) {
+	private long getAccount(String username, String password, String remoteAddress) {
 		PreparedStatement preparedStatement;
 		ResultSet resultSet;
 		
