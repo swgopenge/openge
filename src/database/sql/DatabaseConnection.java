@@ -12,11 +12,10 @@ public class DatabaseConnection {
 	private String host, database, user, pass;
 	private Connection connection = null;
 	private Statement statement = null;
-	private String type;
+	private String type;	// Ziggy: TODO DatabaseType enumeration
 	
-	public DatabaseConnection() { }
-	public DatabaseConnection(String database, String user, String pass, String type) {
-		
+	public DatabaseConnection(String host, String database, String user, String pass, String type) {
+		this.host = host;
 		this.database = database;
 		this.user = user;
 		this.pass = pass;
@@ -25,29 +24,24 @@ public class DatabaseConnection {
 	}
 	
 	public boolean connect() {
-		
-		if (database == null || user == null || pass == null)
-			return false;
-		
-		return connect(host, database, user, pass, type);
-		
-	}
-	public boolean connect(String host, String database, String user, String pass, String type) {
-		
 		ResultSet resultSet = null;
+		String connectionStr = 
+				"jdbc:"
+				+ type 
+				+ "://" 
+				+ host 
+				+ "/"
+				+ database
+				+ (type.equals("mysql") ? "?autoReconnect=true" : "")
+				+ user
+				+ pass;
 		
-		try {
-			if(type.equals("mysql")) {
-				connection = DriverManager.getConnection("jdbc:" + type + "://" + host + "/" + database + "?autoReconnect=true", user, pass);
-				statement = connection.createStatement();
-				resultSet = statement.executeQuery("SELECT VERSION()");
-				return true;
-			} else {
-				connection = DriverManager.getConnection("jdbc:" + type + "://" + host + "/" + database, user, pass);
-				statement = connection.createStatement();
-				resultSet = statement.executeQuery("SELECT VERSION()");
-				return true;
-			}
+		try {			
+			connection = DriverManager.getConnection(connectionStr);
+			statement = connection.createStatement();
+			resultSet = statement.executeQuery("SELECT VERSION()");
+			return true;
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -62,6 +56,7 @@ public class DatabaseConnection {
 		return false;
 		
 	}
+	
 	public void close() {
 		
 		try {
